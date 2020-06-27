@@ -9,4 +9,4 @@ $(BIN):
 	mkdir -p $(BIN)
 baby: $(BIN) baby_boot.s
 	$(AS) -o $(BIN)/baby_boot.o baby_boot.s
-	$(LD) -o $(BIN)/baby_boot.bin --oformat binary --Ttext 0x0 $(BIN)/baby_boot.o
+	$(LD) -o $(BIN)/baby_boot.bin --oformat binary --Ttext 0x7c00 $(BIN)/baby_boot.o

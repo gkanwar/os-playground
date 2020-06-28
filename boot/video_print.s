@@ -3,11 +3,11 @@
 video_clear:
         xor ax, ax
         xor di, di
-video_clear_loop:       
+video_clear_loop:
+        cld     # auto-advance
         cmp di, 0x1000
         jge video_clear_done
         stosw
-        add di, 1
         jmp video_clear_loop
 video_clear_done:
         ret

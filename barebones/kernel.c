@@ -127,4 +127,5 @@ void kernel_main(void)
   terminal_writestring("Welcome to the barebones kernel!\n");
   terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
   terminal_writestring("More features to come, we just have printing for now.\n");
+  terminal_writestring("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
 }

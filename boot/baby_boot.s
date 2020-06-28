@@ -22,6 +22,8 @@ _start:
         mov cl, byte ptr [splash_attrib]
         mov byte ptr [attrib], cl
         call sprint
+        lea si, splash2
+        call sprint
         # call bios_print
 
         # test reg print
@@ -92,6 +94,8 @@ splash_attrib:
         .byte 0x0c # light red on black
 splash:
         .ascii "Welcome to the baby bootloader!\0"
+splash2:
+        .ascii "Press keys to test the keyhandler. Use alt-2 to access the QEMU monitor and shutdown.\0"
         
 port60:
         .word 0

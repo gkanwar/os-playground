@@ -2,7 +2,7 @@
  * Reproduce some C stdlib functionality, as needed.
  */
 
-#include <cstring>
+#include "cstring"
 
 namespace std {
 

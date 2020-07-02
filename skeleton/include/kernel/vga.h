@@ -1,6 +1,11 @@
 #ifndef VGA_H
 #define VGA_H
 
+#include <stddef.h> // TODO: Why can I only include this C-style?
+#include <stdint.h>
+
+// TODO: This should get wrapped up in a singleton class
+
 enum vga_color {
   VGA_COLOR_BLACK = 0,
   VGA_COLOR_BLUE = 1,
@@ -19,5 +24,14 @@ enum vga_color {
   VGA_COLOR_LIGHT_BROWN = 14,
   VGA_COLOR_WHITE = 15,
 };
+
+void terminal_initialize(void);
+void terminal_setcolor(enum vga_color fg, enum vga_color bg);
+void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
+void terminal_advance_row();
+void terminal_advance_char();
+void terminal_putchar(char c);
+void terminal_write(const char* data, size_t size);
+void terminal_writestring(const char* data);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef VGA_H
 #define VGA_H
 
-#include <stddef.h> // TODO: Why can I only include this C-style?
+#include <stddef.h>
 #include <stdint.h>
 
 // TODO: This should get wrapped up in a singleton class

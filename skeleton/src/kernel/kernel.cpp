@@ -16,6 +16,16 @@ using namespace std;
 #endif
 
 
+class Test {
+ public:
+  Test() {
+    a = 'X';
+  }
+  char a;
+};
+
+Test test;
+
 extern "C" {
 void kernel_main(void) 
 {
@@ -25,5 +35,12 @@ void kernel_main(void)
   terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
   terminal_writestring("More features to come, we just have printing for now.\n");
   terminal_writestring("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
+  // check global ctors
+  if (test.a == 'X') {
+    terminal_writestring("[PASS global_ctors]");
+  }
+  else {
+    terminal_writestring("[FAIL global_ctors]");
+  }
 }
 }

@@ -1,6 +1,6 @@
 #include "vga.h" // TODO: rename to TTY? I don't really understand what TTY means...
 
-#include <stddef.h> // TODO: Why can I only include this C-style?
+#include <stddef.h>
 #include <cstring>
 
 using namespace std;

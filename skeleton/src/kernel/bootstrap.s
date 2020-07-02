@@ -26,9 +26,8 @@ stack_top:
 _start:
         mov esp, offset stack_top       # let there be stack!
 
-        /* TODO: load GDT, enable paging, fp and other instruction sets,
-         * C++ RT features */
-
+        /* invoke global ctors */
+        call _init
 
         call kernel_main
         /* shouldn't ret from kernel_main, but who knows what garbage code I

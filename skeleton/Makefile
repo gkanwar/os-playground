@@ -5,6 +5,8 @@ KERNEL_OUT=$(BIN)/kernel.bin
 
 # make sure output dirs exist
 $(shell mkdir -p $(BIN))
+$(shell mkdir -p $(BIN)/kernel)
+$(shell mkdir -p $(BIN)/system)
 
 CROSSBIN=$(HOME)/opt/cross/bin
 AS=$(CROSSBIN)/i686-elf-as
@@ -12,34 +14,55 @@ CC=$(CROSSBIN)/i686-elf-gcc
 CXX=$(CROSSBIN)/i686-elf-g++
 LD=$(CROSSBIN)/i686-elf-ld
 
-CXX_FLAGS=-std=c++14 -ffreestanding -O2 -Wall -Wextra
+CFLAGS=-ffreestanding -O2 -Wall -Wextra
+CXXFLAGS=-std=c++14 -ffreestanding -O2 -Wall -Wextra
 
 
 .SUFFIXES: # remove default rules
-.PHONY: all kernel kernel-binary grub-image
+.PHONY: all clean kernel kernel-binary grub-image
 all: kernel
+clean:
+	rm -rf $(BIN)
 
-CPP_BARE_SRCS = \
-	kernel/kernel.cpp \
-	kernel/vga.cpp \
-	system/stdlib.cpp
-CPP_OBJS = $(addprefix $(BIN)/,$(CPP_BARE_SRCS:.cpp=.o))
-CPP_SRCS = $(addprefix $(SRC)/,$(CPP_BARE_SRCS))
+KERNEL_OBJS = \
+	bootstrap.o \
+	kernel.o \
+	vga.o
+SYSTEM_OBJS = \
+	stdlib.o
+CRTBEGIN_OBJ := $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
+CRTEND_OBJ := $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
+OBJS = \
+	$(BIN)/kernel/crti.o \
+	$(CRTBEGIN_OBJ) \
+	$(addprefix $(BIN)/kernel/,$(KERNEL_OBJS)) \
+	$(addprefix $(BIN)/system/,$(SYSTEM_OBJS)) \
+	$(CRTEND_OBJ) \
+	$(BIN)/kernel/crtn.o
+# have to get the link order right
+LIBS := -nostdlib -lgcc
+LINK_LIST := \
+	$(BIN)/kernel/crti.o \
+	$(CRTBEGIN_OBJ) \
+	$(addprefix $(BIN)/kernel/,$(KERNEL_OBJS)) \
+	$(addprefix $(BIN)/system/,$(SYSTEM_OBJS)) \
+	$(LIBS) \
+	$(CRTEND_OBJ) \
+	$(BIN)/kernel/crtn.o
+
 
 # source rules
 $(BIN)/kernel/%.o: $(SRC)/kernel/%.cpp
-	$(CXX) -c $< -o $@ $(CXX_FLAGS) -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
-$(BIN)/system/%.o: $(SRC)/system/%.cpp
-	$(CXX) -c $< -o $@ $(CXX_FLAGS) -iquote $(INCLUDE)/system
-
-# special files
-$(BIN)/kernel/bootstrap.o: $(SRC)/kernel/bootstrap.s
+	$(CXX) -c $< -o $@ $(CXXFLAGS) -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
+$(BIN)/kernel/%.o: $(SRC)/kernel/%.s
 	$(AS) -o $@ $<
+$(BIN)/system/%.o: $(SRC)/system/%.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) -iquote $(INCLUDE)/system
 
 # build the kernel binary
-$(KERNEL_OUT): $(BIN)/kernel/bootstrap.o $(CPP_OBJS)
-	$(CXX) $^ -T kernel.ld -o $@ $(CXX_FLAGS) -nostdlib -lgcc
-kernel: $(KERNEL_OUT) kernel.ld
+$(KERNEL_OUT): $(OBJS) kernel.ld
+	$(CXX) -T kernel.ld -o $@ $(CXXFLAGS) $(LINK_LIST)
+kernel: $(KERNEL_OUT)
 # depends on grub install which not all dev envs will have
 # ./check_multiboot.sh $(BIN)/kernel.bin
 

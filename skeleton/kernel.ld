@@ -3,6 +3,7 @@ ENTRY(_start)
 SECTIONS {
          /* conventional memory load location for a kernel */
          . = 1M;
+         _kernel_start = .;
          .text BLOCK(4K) : ALIGN(4K) {
                *(.multiboot)
                *(.text)
@@ -17,4 +18,5 @@ SECTIONS {
               *(COMMON) /* what is this?? */
               *(.bss)
          }
+         _kernel_end = .;
 }

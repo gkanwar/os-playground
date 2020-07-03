@@ -5,6 +5,7 @@
 
 namespace std {
 size_t strlen(const char*);
+void * memset(void *ptr, int value, size_t num);
 }
 
 #endif

@@ -16,6 +16,7 @@ LD=$(CROSSBIN)/i686-elf-ld
 
 CFLAGS=-ffreestanding -O2 -Wall -Wextra
 CXXFLAGS=-std=c++14 -ffreestanding -O2 -Wall -Wextra
+ASFLAGS=-x assembler-with-cpp
 
 
 .SUFFIXES: # remove default rules
@@ -27,6 +28,7 @@ clean:
 KERNEL_OBJS = \
 	bootstrap.o \
 	kernel.o \
+	phys_mem_allocator.o \
 	vga.o
 SYSTEM_OBJS = \
 	stdlib.o
@@ -53,11 +55,11 @@ LINK_LIST := \
 
 # source rules
 $(BIN)/kernel/%.o: $(SRC)/kernel/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
 $(BIN)/kernel/%.o: $(SRC)/kernel/%.s
-	$(AS) -o $@ $<
+	$(CXX) $(ASFLAGS) -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
 $(BIN)/system/%.o: $(SRC)/system/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) -iquote $(INCLUDE)/system
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -iquote $(INCLUDE)/system
 
 # build the kernel binary
 $(KERNEL_OUT): $(OBJS) kernel.ld

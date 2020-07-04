@@ -140,10 +140,16 @@ void kernel_main(void)
   terminal_writestring("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
   // check global ctors
   if (test.a == 'X') {
+    uint8_t old_color = terminal_getcolor();
+    terminal_setcolor(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
     terminal_writestring("[PASS global_ctors]");
+    terminal_setcolor(old_color);
   }
   else {
+    uint8_t old_color = terminal_getcolor();
+    terminal_setcolor(VGA_COLOR_RED, VGA_COLOR_BLACK);
     terminal_writestring("[FAIL global_ctors]");
+    terminal_setcolor(old_color);
   }
 }
 }

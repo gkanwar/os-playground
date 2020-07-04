@@ -126,10 +126,44 @@ static format_spec parse_format_spec(const char** pfmt) {
   return spec;
 }
 
-template<typename Writer>
-static void fprintf_format_int(Writer putc, const format_spec& spec, int arg) {
-  char buf[32];
+static size_t unsigned_to_buf(unsigned arg, char* buf) {
   size_t len = 0;
+  while (arg > 0) {
+    buf[len] = '0' + arg % 10;
+    arg /= 10;
+    len++;
+  }
+  return len;
+}
+
+template<typename Writer>
+static void write_fill(Writer putc, const format_spec& spec, uint16_t print_len) {
+  char fill = spec.flags & format_spec::flag::ZeroPad ? '0' : ' ';
+  for (int i = 0; i < spec.min_width - print_len; ++i) {
+    putc(fill);
+  }
+}
+
+template<typename Writer>
+static void format_unsigned(Writer putc, const format_spec& spec, unsigned arg) {
+  char buf[32];
+  char extra = 0;
+  if (arg == 0) {
+    extra = '0';
+  }
+  size_t len = unsigned_to_buf(arg, buf);
+  if (extra) {
+    putc(extra);
+  }
+  write_fill(putc, spec, extra ? len+1 : len);
+  for (size_t i = len; i > 0; --i) {
+    putc(buf[i-1]);
+  }
+}
+
+template<typename Writer>
+static void format_int(Writer putc, const format_spec& spec, int arg) {
+  char buf[32];
   char extra = 0;
   if (arg == 0) {
     extra = '0';
@@ -138,41 +172,36 @@ static void fprintf_format_int(Writer putc, const format_spec& spec, int arg) {
     extra = '-';
     arg *= -1;
   }
-  while (arg > 0) {
-    buf[len] = '0' + arg % 10;
-    arg /= 10;
-    len++;
-  }
+  unsigned uarg = (unsigned)arg;
+  size_t len = unsigned_to_buf(uarg, buf);
   if (extra) {
     putc(extra);
   }
-  if (spec.min_width >= 0) {
-    char fill = spec.flags & format_spec::flag::ZeroPad ? '0' : ' ';
-    uint16_t print_len = len;
-    if (extra) print_len++;
-    for (int i = 0; i < spec.min_width - print_len; ++i) {
-      putc(fill);
-    }
-  }
+  write_fill(putc, spec, extra ? len+1 : len);
   for (size_t i = len; i > 0; --i) {
     putc(buf[i-1]);
   }
 }
 
 template<typename Writer>
-static void vfprintf_format_arg(Writer putc, const char** pfmt, va_list& args) {
+static void format_arg(Writer putc, const char** pfmt, va_list& args) {
   const char* fmt = *pfmt;
   const char* fmt_spec = fmt+1;
   format_spec spec = parse_format_spec(&fmt_spec);
   // if supported format spec, eat the spec and output formatted arg(s)
-  if (spec.specifier == 'd' || spec.specifier == 'i') {
-    *pfmt = fmt_spec;
-    int arg = va_arg(args, int);
-    fprintf_format_int(putc, spec, arg);
-  }
-  else { // unknown format spec, just print '%' and move to next char
-    putc(*fmt);
-    *pfmt += 1;
+  switch (spec.specifier) {
+    case 'd':
+    case 'i':
+      format_int(putc, spec, va_arg(args, int));
+      *pfmt = fmt_spec;
+      return;
+    case 'u':
+      format_unsigned(putc, spec, va_arg(args, unsigned));
+      *pfmt = fmt_spec;
+      return;
+    default: // unknown format spec, just print '%' and move to next char
+      putc(*fmt);
+      *pfmt += 1;
   }
 }
 
@@ -189,7 +218,7 @@ size_t vfprintf(void putc(char), const char* fmt, va_list& args) {
       s++;
       continue;
     }
-    vfprintf_format_arg(counting_putc, &s, args);
+    format_arg(counting_putc, &s, args);
   }
   return tot;
 }

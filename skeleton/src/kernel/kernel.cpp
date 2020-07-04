@@ -54,7 +54,7 @@ int kernel_early_main(const multiboot_info_t *info) {
   // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 3]);
   debug::serial_printf("phys mem bitmap:\n");
   for (int i = 0; i < (1 << 8); ++i) {
-    debug::serial_printf("%08d ", ((uint32_t*)physical_mem_bitmap)[i]);
+    debug::serial_printf("%08u ", ((uint32_t*)physical_mem_bitmap)[i]);
   }
   debug::serial_printf("end kernel_early_main\n");
   return 0;

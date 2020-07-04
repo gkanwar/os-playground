@@ -1,10 +1,11 @@
 /* Custom linker script to combine bootstrap and kernel */
+KERNEL_BASE = 0xc0000000;
 ENTRY(_start)
 SECTIONS {
          /* conventional memory load location for a kernel */
          . = 1M;
-         _kernel_start = .;
-         /* pre-paging sections */
+         _kernel_start = . + KERNEL_BASE;
+         /* pre-paging sections use physical addressing*/
          .pretext ALIGN(4K) : {
                   *(.multiboot)
                   *(.pretext)
@@ -12,17 +13,19 @@ SECTIONS {
          .prerodata : {
                     *(.prerodata)
          }
-         .text : {
+         /* post-paging sections use virtual addressing */
+         . = . + KERNEL_BASE;
+         .text : AT(ADDR(.text) - KERNEL_BASE) {
                *(.multiboot)
                *(.text)
          }
-         .rodata : {
+         .rodata : AT(ADDR(.rodata) - KERNEL_BASE) {
                  *(.rodata)
          }
-         .data : {
+         .data : AT(ADDR(.data) - KERNEL_BASE) {
                *(.data)
          }
-         .bss : {
+         .bss : AT(ADDR(.bss) - KERNEL_BASE) {
               *(COMMON) /* TODO: need to split between pre/post? */
               *(.bss)
          }

@@ -2,8 +2,10 @@
 #define KERNEL_H
 
 // FORNOW: check id mapping works
-#define KERNEL_BASE 0x0 //0xc0000000
+#define KERNEL_BASE 0xc0000000
 #define KERNEL_VIRT_TO_PHYS(addr) ((addr) - KERNEL_BASE)
+#define PAGE_MASK (~(0xfff))
+#define PAGE_SIZE 0x1000
 
 #ifndef ASM_FILE // C++ specific stuff
 

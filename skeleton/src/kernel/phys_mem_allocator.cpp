@@ -5,8 +5,6 @@
 #include "multiboot.h"
 
 #define PAGE_ADDR_NBITS 12
-#define PAGE_ADDR_MASK 0xfff
-#define PAGE_SIZE 0x1000
 
 using namespace std;
 
@@ -15,12 +13,8 @@ using namespace std;
 // continues to use this bitmap since there's no point copying it.
 extern uint8_t physical_mem_bitmap[1 << 17];
 
-static unsigned long page_addr_to_bit(uint64_t addr) {
+static unsigned page_addr_to_bit(uint64_t addr) {
   return (uint32_t) (addr >> PAGE_ADDR_NBITS);
-}
-static uint64_t round_addr_to_page(uint64_t addr) {
-  addr &= ~(PAGE_ADDR_MASK);
-  return addr;
 }
 static void mark_unavail_pages(const multiboot_memory_map_t& mmap, uint8_t *mem_bitmap) {
   // NOTE: we reclaim all ACPI memory at this boot stage
@@ -28,11 +22,11 @@ static void mark_unavail_pages(const multiboot_memory_map_t& mmap, uint8_t *mem_
       mmap.type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) {
     return;
   }
-  uint64_t addr = round_addr_to_page(mmap.addr);
+  uint64_t addr = mmap.addr & PAGE_MASK;
   // TODO: could be more efficient by holding byte (or word) in tmp and making
   // all changes before writeback.
   for (; addr < mmap.addr + mmap.len; addr += PAGE_SIZE) {
-    uint32_t i = page_addr_to_bit(addr);
+    unsigned i = page_addr_to_bit(addr);
     mem_bitmap[i/8] |= 1 << (i%8);
   }
 }
@@ -47,8 +41,11 @@ void PhysMemAllocator::parse_mmap_to_bitmap(uint32_t mmap_length, uint32_t mmap_
   }
   // mark the kernel code allocated too, otherwise BAD THINGS can happen
   multiboot_memory_map_t kernel_mmap;
-  kernel_mmap.addr = (uint64_t)&_kernel_start;
-  kernel_mmap.len = (uint64_t)&_kernel_end - (uint64_t)&_kernel_start;
+  // TODO: better way to avoid sign extension issues?
+  uint32_t kernel_start_addr = (uint32_t)&_kernel_start;
+  uint32_t kernel_end_addr = (uint32_t)&_kernel_end;
+  kernel_mmap.addr = KERNEL_VIRT_TO_PHYS(kernel_start_addr);
+  kernel_mmap.len = kernel_end_addr - kernel_start_addr;
   kernel_mmap.type = MULTIBOOT_MEMORY_RESERVED;
   mark_unavail_pages(kernel_mmap, physical_mem_bitmap);
 }

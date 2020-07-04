@@ -61,7 +61,7 @@ init_gdtr:
         .global _start
         .type _start, @function
 _start:
-        mov esp, offset stack_top       # let there be stack!
+        mov esp, KERNEL_VIRT_TO_PHYS(offset stack_top)       # let there be stack!
 
         /* set up initial GDT */
         call load_init_gdt
@@ -71,6 +71,7 @@ _start:
 
         /* early main is responsible for establishing the kernel memory system */
         mov ecx, ebx
+        add ecx, KERNEL_BASE            # fix multiboot struct addr
         call kernel_early_main
         test eax,eax
         jnz end                         # quit on error code
@@ -111,4 +112,6 @@ init_paging:
         mov eax, cr0
         or eax, CR0_PG
         mov cr0, eax
+        /* fix the stack */
+        add esp, KERNEL_BASE
         ret

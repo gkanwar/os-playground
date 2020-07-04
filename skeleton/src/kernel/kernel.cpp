@@ -66,8 +66,9 @@ void setup_paging(const multiboot_info_t* info) {
   p_init_page_dir[highhalf_pd_index] = kernel_pd_entry;
 
   // scan kernel pages and insert into common 4MiB page table block
-  uint32_t kernel_page = KERNEL_VIRT_TO_PHYS((uint32_t)(&_kernel_start)) & 0xfffffc00;
-  for (; kernel_page < KERNEL_VIRT_TO_PHYS((uint32_t)(&_kernel_end)); kernel_page += 0x1000) {
+  uint32_t kernel_page = KERNEL_VIRT_TO_PHYS((uint32_t)(&_kernel_start)) & PAGE_MASK;
+  for (; kernel_page < KERNEL_VIRT_TO_PHYS((uint32_t)(&_kernel_end));
+       kernel_page += PAGE_SIZE) {
     map_page(kernel_page, kernel_page, p_init_page_table);
   }
 
@@ -76,13 +77,21 @@ void setup_paging(const multiboot_info_t* info) {
   assert(vga_pd_index == highhalf_pd_index); // need to reuse PT
   map_page(VIRT_TERM_BUFFER, TERM_BUFFER, p_init_page_table);
 
-  // map multiboot info into higher half memory
+  // map multiboot info and mmap info into higher half memory
   uint32_t multiboot_addr = (uint32_t)info;
-  size_t multiboot_pd_index = multiboot_addr >> 22;
+  size_t multiboot_pd_index = (KERNEL_BASE + multiboot_addr) >> 22;
   assert(multiboot_pd_index == highhalf_pd_index); // need to reuse PT
-  uint32_t multiboot_page = multiboot_addr & 0xfffffc00;
-  for (; multiboot_page < multiboot_addr + sizeof(multiboot_info_t); multiboot_page += 0x1000) {
+  uint32_t multiboot_page = multiboot_addr & PAGE_MASK;
+  for (; multiboot_page < multiboot_addr + sizeof(multiboot_info_t);
+       multiboot_page += PAGE_SIZE) {
     map_page(KERNEL_BASE + multiboot_page, multiboot_page, p_init_page_table);
+  }
+  multiboot_pd_index = (KERNEL_BASE + info->mmap_addr) >> 22;
+  assert(multiboot_pd_index == highhalf_pd_index); // need to reuse PT
+  uint32_t mmap_page = info->mmap_addr & PAGE_MASK;
+  for (; mmap_page < info->mmap_addr + info->mmap_length;
+       mmap_page += PAGE_SIZE) {
+    map_page(KERNEL_BASE + mmap_page, mmap_page, p_init_page_table);
   }
 }
 #undef assert
@@ -109,18 +118,14 @@ int kernel_early_main(const multiboot_info_t *info) {
     return 1;
   }
   uint32_t mmap_length = info->mmap_length;
-  uint32_t mmap_addr = info->mmap_addr;
+  uint32_t mmap_addr = info->mmap_addr + KERNEL_BASE;
   PhysMemAllocator::parse_mmap_to_bitmap(mmap_length, mmap_addr);
   debug::serial_printf("mmap structure loaded into phys mem bitmap\n");
-  // check whether kernel is marked alloc'd
-  // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[1 << 5]);
-  // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 1]);
-  // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 2]);
-  // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 3]);
   debug::serial_printf("phys mem bitmap:\n");
   for (int i = 0; i < (1 << 8); ++i) {
     debug::serial_printf("%08x ", ((uint32_t*)physical_mem_bitmap)[i]);
   }
+  debug::serial_printf("...\n");
   debug::serial_printf("end kernel_early_main\n");
   return 0;
 }

@@ -27,6 +27,7 @@ clean:
 
 KERNEL_OBJS = \
 	bootstrap.o \
+	debug_serial.o \
 	kernel.o \
 	phys_mem_allocator.o \
 	vga.o

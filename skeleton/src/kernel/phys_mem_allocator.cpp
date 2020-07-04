@@ -1,6 +1,7 @@
 #include "phys_mem_allocator.h"
 
 #include <cstring>
+#include "kernel.h"
 #include "multiboot.h"
 
 #define PAGE_ADDR_NBITS 12
@@ -8,6 +9,11 @@
 #define PAGE_SIZE 0x1000
 
 using namespace std;
+
+// NOTE: we must use this global var set aside in bootstrap.s since global ctors
+// and real memory allocation is not up initially. After full boot, PMA just
+// continues to use this bitmap since there's no point copying it.
+extern uint8_t physical_mem_bitmap[1 << 17];
 
 static unsigned long page_addr_to_bit(uint64_t addr) {
   return (uint32_t) (addr >> PAGE_ADDR_NBITS);
@@ -39,4 +45,10 @@ void PhysMemAllocator::parse_mmap_to_bitmap(uint32_t mmap_length, uint32_t mmap_
        mmap = (multiboot_memory_map_t*) ((uint32_t) mmap + mmap->size + sizeof(mmap->size))) {
     mark_unavail_pages(*mmap, physical_mem_bitmap);
   }
+  // mark the kernel code allocated too, otherwise BAD THINGS can happen
+  multiboot_memory_map_t kernel_mmap;
+  kernel_mmap.addr = (uint64_t)&_kernel_start;
+  kernel_mmap.len = (uint64_t)&_kernel_end - (uint64_t)&_kernel_start;
+  kernel_mmap.type = MULTIBOOT_MEMORY_RESERVED;
+  mark_unavail_pages(kernel_mmap, physical_mem_bitmap);
 }

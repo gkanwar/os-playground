@@ -37,26 +37,26 @@ extern "C" {
 __attribute__((fastcall))
 int kernel_early_main(const multiboot_info_t *info) {
   debug::init_serial();
-  debug::serial_write("begin kernel_early_main\n");
+  debug::serial_printf("begin kernel_early_main\n");
   unsigned long flags = info->flags;
   if (!(flags & MULTIBOOT_INFO_MEM_MAP)) {
-    debug::serial_write("multiboot mmap structures required to boot\n");
+    debug::serial_printf("multiboot mmap structures required to boot\n");
     return 1;
   }
   uint32_t mmap_length = info->mmap_length;
   uint32_t mmap_addr = info->mmap_addr;
   PhysMemAllocator::parse_mmap_to_bitmap(mmap_length, mmap_addr);
-  debug::serial_write("mmap structure loaded into phys mem bitmap\n");
+  debug::serial_printf("mmap structure loaded into phys mem bitmap\n");
   // check whether kernel is marked alloc'd
   // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[1 << 5]);
   // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 1]);
   // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 2]);
   // debug::serial_printf("kernel pages: %d\n", physical_mem_bitmap[(1 << 5) + 3]);
-  debug::serial_write("phys mem bitmap:\n");
+  debug::serial_printf("phys mem bitmap:\n");
   for (int i = 0; i < (1 << 8); ++i) {
-    debug::serial_printf("%d ", physical_mem_bitmap[i]);
+    debug::serial_printf("%08d ", ((uint32_t*)physical_mem_bitmap)[i]);
   }
-  debug::serial_write("end kernel_early_main\n");
+  debug::serial_printf("end kernel_early_main\n");
   return 0;
 }
   

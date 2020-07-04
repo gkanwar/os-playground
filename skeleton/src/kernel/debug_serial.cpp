@@ -35,12 +35,6 @@ void serial_putc(char c) {
   io::out8(COM1_PORT, c);
 }
 
-void serial_write(const char* str) {
-  for (; *str != '\0'; str++) {
-    serial_putc(*str);
-  }
-}
-
 void serial_printf(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);

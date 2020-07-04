@@ -11,7 +11,6 @@ namespace debug {
 
 void init_serial();
 void serial_putc(char);
-void serial_write(const char*);
 void serial_printf(const char* fmt, ...);
 
 }

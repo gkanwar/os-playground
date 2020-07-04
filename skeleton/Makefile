@@ -2,6 +2,7 @@ BIN=bin
 SRC=src
 INCLUDE=include
 KERNEL_OUT=$(BIN)/kernel.bin
+PROJ_NAME=gullfoss
 
 # make sure output dirs exist
 $(shell mkdir -p $(BIN))
@@ -15,7 +16,7 @@ CXX=$(CROSSBIN)/i686-elf-g++
 LD=$(CROSSBIN)/i686-elf-ld
 
 CFLAGS=-ffreestanding -O2 -Wall -Wextra
-CXXFLAGS=-std=c++14 -ffreestanding -O2 -Wall -Wextra
+CXXFLAGS=-std=c++14 -ffreestanding -O2 -Wall -Wextra -g
 ASFLAGS=-x assembler-with-cpp
 
 
@@ -74,4 +75,4 @@ grub-image: kernel grub.cfg
 	mkdir -p $(BIN)/iso/boot/grub
 	cp $(KERNEL_OUT) $(BIN)/iso/boot/
 	cp grub.cfg $(BIN)/iso/boot/grub/
-	grub-mkrescue -o $(BIN)/tejos.iso $(BIN)/iso
+	grub-mkrescue -o $(BIN)/$(PROJ_NAME).iso $(BIN)/iso

@@ -4,18 +4,26 @@ SECTIONS {
          /* conventional memory load location for a kernel */
          . = 1M;
          _kernel_start = .;
-         .text BLOCK(4K) : ALIGN(4K) {
+         /* pre-paging sections */
+         .pretext ALIGN(4K) : {
+                  *(.multiboot)
+                  *(.pretext)
+         }
+         .prerodata : {
+                    *(.prerodata)
+         }
+         .text : {
                *(.multiboot)
                *(.text)
          }
-         .rodata BLOCK(4K) : ALIGN(4K) {
+         .rodata : {
                  *(.rodata)
          }
-         .data BLOCK(4K) : ALIGN(4K) {
+         .data : {
                *(.data)
          }
-         .bss BLOCK(4K) : ALIGN(4K) {
-              *(COMMON) /* what is this?? */
+         .bss : {
+              *(COMMON) /* TODO: need to split between pre/post? */
               *(.bss)
          }
          _kernel_end = .;

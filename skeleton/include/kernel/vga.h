@@ -3,8 +3,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "kernel.h"
 
 // TODO: This should get wrapped up in a singleton class
+
+#define TERM_BUFFER 0xB8000
+#define VIRT_TERM_BUFFER (TERM_BUFFER + KERNEL_BASE)
 
 enum vga_color {
   VGA_COLOR_BLACK = 0,

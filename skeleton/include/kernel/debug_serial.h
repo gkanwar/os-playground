@@ -3,7 +3,7 @@
 
 /**
  * We need serial debugging as early as possible, even before the full kernel
- * memory system is booted. So here we provide a very raw interface to COM1
+ * driver system is booted. So here we provide a very raw interface to COM1
  * serial for this purpose.
  */
 

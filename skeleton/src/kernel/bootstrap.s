@@ -1,5 +1,6 @@
 #define ASM_FILE 1
 #include "multiboot.h"
+#include "kernel.h"
 #define MULTIBOOT_FLAGS MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO
 #define MULTIBOOT_CHECKSUM -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_FLAGS)
 
@@ -14,7 +15,7 @@
 
         
         .section .bss
-        .global physical_mem_bitmap
+        .global physical_mem_bitmap, init_page_dir, init_page_tables
         /* kernel stack */
         .align 16
 stack_bottom:
@@ -29,8 +30,14 @@ physical_mem_bitmap:
          */
         .skip 1 << 17
 
+        .align 4096
+init_page_dir:
+        .skip 4096
+init_page_tables:
+        .skip 4096                      # each PT gives 4MiB, should be enough for now
+
       
-        .section .rodata
+        .section .prerodata, "a", @progbits
         .set LIMIT_fffff, 0xf << 48 | 0xffff
         .set ACCESS_KERN_CODE, 0b10011010 << 40
         .set ACCESS_KERN_DATA, 0b10010010 << 40
@@ -49,7 +56,7 @@ init_gdtr:
         .4byte init_gdt
 
 
-        .section .text
+        .section .pretext, "ax", @progbits
         .set CR0_PG, 1 << 31
         .global _start
         .type _start, @function
@@ -59,20 +66,14 @@ _start:
         /* set up initial GDT */
         call load_init_gdt
 
-        /* early main is pre-paging, pre-ctors */
+        /* set up minimal paging */
+        call init_paging
+
+        /* early main is responsible for establishing the kernel memory system */
         mov ecx, ebx
         call kernel_early_main
         test eax,eax
         jnz end                         # quit on error code
-
-        /* TODO: set up paging */
-        /*
-        mov eax, init_page_dir
-        mov cr3, eax
-        mov eax, cr0
-        or eax, CR0_PG
-        mov cr0, eax
-        */
 
         /* invoke global ctors */
         call _init
@@ -97,4 +98,17 @@ reload_data_segs:
         mov fs, ax
         mov gs, ax
         mov ss, ax
+        ret
+
+        /* load page dir and initial table with identity mapping and higher
+         * half mapping so we can call into higher half C++ code */
+init_paging:
+        mov ecx, ebx                    # pass multiboot info addr
+        call setup_paging
+        /* enable paging */
+        mov eax, KERNEL_VIRT_TO_PHYS(offset init_page_dir)
+        mov cr3, eax
+        mov eax, cr0
+        or eax, CR0_PG
+        mov cr0, eax
         ret

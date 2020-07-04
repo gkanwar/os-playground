@@ -135,6 +135,20 @@ static size_t unsigned_to_buf(unsigned arg, char* buf) {
   }
   return len;
 }
+static size_t hex_to_buf(unsigned arg, char* buf) {
+  size_t len = 0;
+  while (arg > 0) {
+    if (arg % 16 < 10) {
+      buf[len] = '0' + arg % 16;
+    }
+    else {
+      buf[len] = 'a' + (arg % 16) - 10;
+    }
+    arg /= 16;
+    len++;
+  }
+  return len;
+}
 
 template<typename Writer>
 static void write_fill(Writer putc, const format_spec& spec, uint16_t print_len) {
@@ -184,6 +198,23 @@ static void format_int(Writer putc, const format_spec& spec, int arg) {
 }
 
 template<typename Writer>
+static void format_hex(Writer putc, const format_spec& spec, unsigned arg) {
+  char buf[32];
+  char extra = 0;
+  if (arg == 0) {
+    extra = '0';
+  }
+  size_t len = hex_to_buf(arg, buf);
+  if (extra) {
+    putc(extra);
+  }
+  write_fill(putc, spec, extra ? len+1 : len);
+  for (size_t i = len; i > 0; --i) {
+    putc(buf[i-1]);
+  }
+}
+
+template<typename Writer>
 static void format_arg(Writer putc, const char** pfmt, va_list& args) {
   const char* fmt = *pfmt;
   const char* fmt_spec = fmt+1;
@@ -193,16 +224,19 @@ static void format_arg(Writer putc, const char** pfmt, va_list& args) {
     case 'd':
     case 'i':
       format_int(putc, spec, va_arg(args, int));
-      *pfmt = fmt_spec;
-      return;
+      break;
     case 'u':
       format_unsigned(putc, spec, va_arg(args, unsigned));
-      *pfmt = fmt_spec;
-      return;
+      break;
+    case 'x':
+      format_hex(putc, spec, va_arg(args, unsigned));
+      break;
     default: // unknown format spec, just print '%' and move to next char
       putc(*fmt);
       *pfmt += 1;
+      return;
   }
+  *pfmt = fmt_spec;
 }
 
 size_t vfprintf(void putc(char), const char* fmt, va_list& args) {

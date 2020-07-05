@@ -1,7 +1,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-// FORNOW: check id mapping works
+#define PROJ_NAME "gulfoss"
 #define KERNEL_BASE 0xc0000000
 #define KERNEL_VIRT_TO_PHYS(addr) ((addr) - KERNEL_BASE)
 #define PAGE_MASK (~(0xfff))

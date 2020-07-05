@@ -16,7 +16,7 @@ CXX=$(CROSSBIN)/i686-elf-g++
 LD=$(CROSSBIN)/i686-elf-ld
 
 CFLAGS=-ffreestanding -O2 -Wall -Wextra
-CXXFLAGS=-std=c++14 -ffreestanding -O2 -Wall -Wextra -g
+CXXFLAGS=-std=c++14 -ffreestanding -fno-rtti -fno-exceptions -O2 -Wall -Wextra -g
 ASFLAGS=-x assembler-with-cpp
 
 

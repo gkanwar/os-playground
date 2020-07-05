@@ -20,18 +20,9 @@ using namespace std;
 #endif
 
 
-// TODO: Need to accept some kind of test-mode flag from multiboot
-class Test {
- public:
-  Test() {
-    a = 'X';
-  }
-  char a;
-};
+// PMA is held globally because it exists before VM allocation exists.
+PhysMemAllocator pma;
 
-Test test;
-
-extern uint8_t physical_mem_bitmap[1 << 17];
 extern uint32_t init_page_dir[1024];
 extern uint32_t init_page_tables[1024];
 
@@ -119,11 +110,10 @@ int kernel_early_main(const multiboot_info_t *info) {
   }
   uint32_t mmap_length = info->mmap_length;
   uint32_t mmap_addr = info->mmap_addr + KERNEL_BASE;
-  PhysMemAllocator::parse_mmap_to_bitmap(mmap_length, mmap_addr);
-  debug::serial_printf("mmap structure loaded into phys mem bitmap\n");
+  pma.parse_mmap_to_bitmap(mmap_length, mmap_addr);
   debug::serial_printf("phys mem bitmap:\n");
   for (int i = 0; i < (1 << 8); ++i) {
-    debug::serial_printf("%08x ", ((uint32_t*)physical_mem_bitmap)[i]);
+    debug::serial_printf("%08x ", ((uint32_t*)pma.mem_bitmap)[i]);
   }
   debug::serial_printf("...\n");
   debug::serial_printf("end kernel_early_main\n");
@@ -138,18 +128,5 @@ void kernel_main(void)
   terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
   terminal_writestring("More features to come, tests for some specific ones run below.\n");
   terminal_writestring("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
-  // check global ctors
-  if (test.a == 'X') {
-    uint8_t old_color = terminal_getcolor();
-    terminal_setcolor(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
-    terminal_writestring("[PASS global_ctors]");
-    terminal_setcolor(old_color);
-  }
-  else {
-    uint8_t old_color = terminal_getcolor();
-    terminal_setcolor(VGA_COLOR_RED, VGA_COLOR_BLACK);
-    terminal_writestring("[FAIL global_ctors]");
-    terminal_setcolor(old_color);
-  }
 }
 }

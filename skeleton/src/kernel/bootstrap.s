@@ -15,20 +15,12 @@
 
         
         .section .bss
-        .global physical_mem_bitmap, init_page_dir, init_page_tables
+        .global init_page_dir, init_page_tables
         /* kernel stack */
         .align 16
 stack_bottom:
         .skip 16384
 stack_top:
-
-physical_mem_bitmap:
-        /**
-         * (2^32 / 2^12) = 2^20 addressable pages,
-         * 8 bits per byte = 2^17 bytes for the mem bitmap.
-         * The i'th bit corresponds to the page at address (0x100000 * i).
-         */
-        .skip 1 << 17
 
         .align 4096
 init_page_dir:

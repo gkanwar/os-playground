@@ -6,6 +6,8 @@
 #define KERNEL_VIRT_TO_PHYS(addr) ((addr) - KERNEL_BASE)
 #define PAGE_MASK (~(0xfff))
 #define PAGE_SIZE 0x1000
+#define PAGE_ADDR_NBITS 12
+#define NUM_PAGES (1 << 20)
 
 #ifndef ASM_FILE // C++ specific stuff
 

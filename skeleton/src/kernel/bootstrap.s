@@ -26,7 +26,7 @@ stack_top:
 init_page_dir:
         .skip 4096
 init_page_tables:
-        .skip 4096                      # each PT gives 4MiB, should be enough for now
+        .skip 4096*1024                  # allocate all page tables (wasteful!)
 
       
         .section .prerodata, "a", @progbits

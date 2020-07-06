@@ -26,30 +26,39 @@ all: kernel
 clean:
 	rm -rf $(BIN)
 
-KERNEL_OBJS = \
-	bootstrap.o \
-	debug_serial.o \
-	kernel.o \
-	phys_mem_allocator.o \
-	vga.o
-SYSTEM_OBJS = \
-	stdlib.o
+KERNEL_SRCS = \
+	bootstrap.s \
+	debug_serial.cpp \
+	heap_allocator.cpp \
+	kernel.cpp \
+	phys_mem_allocator.cpp \
+	vga.cpp \
+	virt_mem_allocator.cpp
+SYSTEM_SRCS = \
+	stdlib.cpp
+
+# identify all obj and dep files
+KERNEL_OBJS = $(addprefix $(BIN)/kernel/,$(patsubst %.cpp,%.o,$(KERNEL_SRCS:.s=.o)))
+KERNEL_DEPS = $(KERNEL_OBJS:.o=.d)
+SYSTEM_OBJS = $(addprefix $(BIN)/system/,$(SYSTEM_SRCS:.cpp=.o))
+SYSTEM_DEPS = $(SYSTEM_OBJS:.o=.d)
+
+# list objs to compile and (ordered) link arg list for gcc
 CRTBEGIN_OBJ := $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 CRTEND_OBJ := $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 OBJS = \
 	$(BIN)/kernel/crti.o \
 	$(CRTBEGIN_OBJ) \
-	$(addprefix $(BIN)/kernel/,$(KERNEL_OBJS)) \
-	$(addprefix $(BIN)/system/,$(SYSTEM_OBJS)) \
+	$(KERNEL_OBJS) \
+	$(SYSTEM_OBJS) \
 	$(CRTEND_OBJ) \
 	$(BIN)/kernel/crtn.o
-# have to get the link order right
 LIBS := -nostdlib -lgcc
 LINK_LIST := \
 	$(BIN)/kernel/crti.o \
 	$(CRTBEGIN_OBJ) \
-	$(addprefix $(BIN)/kernel/,$(KERNEL_OBJS)) \
-	$(addprefix $(BIN)/system/,$(SYSTEM_OBJS)) \
+	$(KERNEL_OBJS) \
+	$(SYSTEM_OBJS) \
 	$(LIBS) \
 	$(CRTEND_OBJ) \
 	$(BIN)/kernel/crtn.o
@@ -57,11 +66,11 @@ LINK_LIST := \
 
 # source rules
 $(BIN)/kernel/%.o: $(SRC)/kernel/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
+	$(CXX) $(CXXFLAGS) -MD -MP -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
 $(BIN)/kernel/%.o: $(SRC)/kernel/%.s
-	$(CXX) $(ASFLAGS) -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
+	$(CXX) $(ASFLAGS) -MD -MP -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
 $(BIN)/system/%.o: $(SRC)/system/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -iquote $(INCLUDE)/system
+	$(CXX) $(CXXFLAGS) -MD -MP -c $< -o $@ -iquote $(INCLUDE)/system
 
 # build the kernel binary
 $(KERNEL_OUT): $(OBJS) kernel.ld
@@ -76,3 +85,5 @@ grub-image: kernel grub.cfg
 	cp $(KERNEL_OUT) $(BIN)/iso/boot/
 	cp grub.cfg $(BIN)/iso/boot/grub/
 	grub-mkrescue -o $(BIN)/$(PROJ_NAME).iso $(BIN)/iso
+
+-include $(KERNEL_DEPS) $(SYSTEM_DEPS)

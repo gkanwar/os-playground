@@ -4,15 +4,16 @@
 #include <stdint.h>
 #include "kernel.h"
 
-class PhysMemAllocator;
-static PhysMemAllocator* pma_inst;
-
 class PhysMemAllocator {
  public:
-  PhysMemAllocator() { pma_inst = this; }
-  static PhysMemAllocator& get() { return *pma_inst; }
-  void parse_mmap_to_bitmap(uint32_t mmap_length, uint32_t mmap_addr);
+  PhysMemAllocator();
+  static PhysMemAllocator& get();
+  void init_mmap(uint32_t mmap_length, uint32_t mmap_addr);
+  void* alloc1();
+  void* alloc8();
+  void* alloc32();
   uint8_t mem_bitmap[NUM_PAGES / 8];
+  unsigned last_alloc;
 };
 
 #endif

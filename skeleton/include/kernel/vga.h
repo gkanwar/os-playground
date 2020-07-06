@@ -9,6 +9,7 @@
 
 #define TERM_BUFFER 0xB8000
 #define VIRT_TERM_BUFFER (TERM_BUFFER + KERNEL_BASE)
+#define TERM_BUFFER_LEN 0x1000
 
 enum vga_color {
   VGA_COLOR_BLACK = 0,

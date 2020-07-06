@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "heap_allocator.h"
 #include "debug_serial.h"
 
@@ -22,18 +23,18 @@ void HeapAllocator::init_heap_pages(
     PhysMemAllocator& physMemAlloc, VirtMemAllocator& virtMemAlloc) {
   // grab a 4MiB contiguous region of kernel virtual memory
   heap = (HeapBlock*)virtMemAlloc.reserve_block();
-  
-  // TODO: assert(HEAP_PAGES % 32 == 0)
+
+  assert(HEAP_PAGES % 32 == 0, "heap must be allocated in 32-page blocks");
   const unsigned n_chunks = HEAP_PAGES / CHUNK_PAGES;
   for (unsigned i = 0; i < n_chunks; ++i) {
-    // TODO: assert(CHUNK_PAGES == 32)
+    assert(CHUNK_PAGES == 32, "heap must be allocated in 32-page blocks");
     phys_heap_chunks[i] = physMemAlloc.alloc32();
-    // TODO: assert(phys_heap_chunks[i])
+    assert(phys_heap_chunks[i], "heap chunk alloc failed");
     for (unsigned j = 0; j < CHUNK_PAGES; ++j) {
       void* heap_page = (void*)((uint32_t)phys_heap_chunks[i] + j*PAGE_SIZE);
       void* virt_page = (void*)((uint32_t)heap + (CHUNK_PAGES*i+j)*PAGE_SIZE);
-      virtMemAlloc.map_page(virt_page, heap_page);
-      // TODO: assert(return is not false)
+      void* res = virtMemAlloc.map_page(virt_page, heap_page);
+      assert(res, "mapping heap page failed");
       // save addresses of suballocators
       if (j == 0) {
         if (i == n_chunks-3) {

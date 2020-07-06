@@ -1,6 +1,7 @@
 #include "phys_mem_allocator.h"
 
 #include <cstring>
+#include "assert.h"
 #include "kernel.h"
 #include "multiboot.h"
 #include "vga.h"
@@ -121,7 +122,7 @@ void* PhysMemAllocator::alloc8() {
 void* PhysMemAllocator::alloc32() {
   const unsigned b32 = sizeof(uint32_t)/sizeof(uint8_t);
   auto try_alloc32 = [&](unsigned i)->void* {
-    // TODO: assert(i%b32 == 0)
+    assert(i % b32 == 0, "i must be 32-page aligned");
     uint32_t bitmap = ((uint32_t*)mem_bitmap)[i/b32];
     if (bitmap == 0) {
       ((uint32_t*)mem_bitmap)[i/b32] = 0xffffffff;

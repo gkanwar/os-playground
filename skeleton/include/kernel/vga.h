@@ -11,6 +11,9 @@
 #define VIRT_TERM_BUFFER (TERM_BUFFER + KERNEL_BASE)
 #define TERM_BUFFER_LEN 0x1000
 
+const size_t VGA_WIDTH = 80;
+const size_t VGA_HEIGHT = 25;
+
 enum vga_color {
   VGA_COLOR_BLACK = 0,
   VGA_COLOR_BLUE = 1,
@@ -31,9 +34,11 @@ enum vga_color {
 };
 
 void terminal_initialize();
+void terminal_clear();
 uint8_t terminal_getcolor();
 void terminal_setcolor(enum vga_color fg, enum vga_color bg);
 void terminal_setcolor(uint8_t color);
+void terminal_setindent(size_t indent);
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
 void terminal_advance_row();
 void terminal_advance_char();

@@ -31,7 +31,9 @@ KERNEL_SRCS = \
 	debug_serial.cpp \
 	heap_allocator.cpp \
 	kernel.cpp \
+	panic.cpp \
 	phys_mem_allocator.cpp \
+	pre_kernel.cpp \
 	vga.cpp \
 	virt_mem_allocator.cpp
 SYSTEM_SRCS = \

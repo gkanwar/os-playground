@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "kernel.h"
 #include "virt_mem_allocator.h"
 #include "debug_serial.h"
@@ -59,10 +60,11 @@ void* VirtMemAllocator::find_free_virt_page() {
 }
 
 void* VirtMemAllocator::map_page(void* virt_page, void* phys_page) {
-  // TODO: assert alignments
   if (!virt_page) {
     virt_page = find_free_virt_page();
   }
+  assert((uint32_t)virt_page % PAGE_SIZE == 0, "virt page must be aligned");
+  assert((uint32_t)phys_page % PAGE_SIZE == 0, "phys page must be aligned");
   unsigned pd_index = VIRT_TO_PD_INDEX(virt_page);
   unsigned pt_index = VIRT_TO_PT_INDEX(virt_page);
   uint32_t* page_table = get_page_table(pd_index);

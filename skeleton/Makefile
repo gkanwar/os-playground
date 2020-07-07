@@ -11,7 +11,7 @@ CXX := $(CROSSBIN)/i686-elf-g++
 LD := $(CROSSBIN)/i686-elf-ld
 
 .SUFFIXES: # remove default rules
-.PHONY: debug release kernel clean kernel-binary grub-image vmdk-image
+.PHONY: debug release kernel clean kernel-binary grub-image
 
 
 ### Recursive/trivial make targets
@@ -29,11 +29,7 @@ grub-image: release grub.cfg
 	mkdir -p $(BIN)/iso/boot/grub
 	cp $(KERNEL_OUT) $(BIN)/iso/boot/
 	cp grub.cfg $(BIN)/iso/boot/grub/
-	grub-mkrescue -o $(BIN)/$(PROJ_NAME).iso $(BIN)/iso
-
-vmdk-image: TARGET := release
-vmdk-image: release
-	qemu-img convert -O vmdk $(KERNEL_OUT) $(BIN)/$(TARGET)/$(PROJ_NAME).vmdk
+	grub-mkrescue -o $(BIN)/$(TARGET)/$(PROJ_NAME).iso $(BIN)/iso
 
 
 ### Main make targets (TARGET is defined)

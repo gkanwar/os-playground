@@ -38,6 +38,7 @@ init_page_tables:
         .set KERN_CODE_DESC, LIMIT_fffff | ACCESS_KERN_CODE | FLAGS_SIZE_32 | FLAGS_PAGE_GRAN
         .set KERN_DATA_DESC, LIMIT_fffff | ACCESS_KERN_DATA | FLAGS_SIZE_32 | FLAGS_PAGE_GRAN
 init_gdt:
+        .align 16
         .skip 8 # null descriptor
         .8byte KERN_CODE_DESC
         .8byte KERN_DATA_DESC

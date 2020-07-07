@@ -76,9 +76,11 @@ int kernel_early_main(const multiboot_info_t *info) {
   return 0;
 }
   
-void kernel_main(void) 
+[[noreturn]] void kernel_main(void) 
 {
+  debug::serial_printf("start kernel_main\n");
   VirtMemAllocator::get().clear_ident_map();
+  debug::serial_printf("ident map cleared\n");
 
   terminal_initialize();
   terminal_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -86,6 +88,7 @@ void kernel_main(void)
   terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
   terminal_writestring("More features to come, tests for some specific ones run below.\n");
   terminal_writestring("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
+  debug::serial_printf("terminal works!\n");
   
   test::run_test("malloc(128)", [&]()->bool {
     uint8_t* mem_chunk = (uint8_t*)HeapAllocator::get().malloc(128);
@@ -115,6 +118,10 @@ void kernel_main(void)
     uint8_t byte = mem_chunk[27];
     return byte == 0x88;
   });
+  debug::serial_printf("malloc all good\n");
+
+  // TODO: busy loop replaced with forking into real kernel threads
+  while (true) {}
 }
 
 }

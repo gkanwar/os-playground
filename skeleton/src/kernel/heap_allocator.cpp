@@ -9,15 +9,15 @@ HeapAllocator& HeapAllocator::get() { return *inst; }
 
 #define HEAP_BLOCK_ALIGN 64
 union alignas(HEAP_BLOCK_ALIGN) HeapAllocator::HeapBlock {
-  struct Header {
+  struct {
     HeapBlock* next;
     size_t size;
     bool allocated;
-  } header;
+  };
   // header align 16
   uint8_t align[16];
   // data implicitly follows
-};
+} __attribute__((packed));
 
 void HeapAllocator::init_heap_pages(
     PhysMemAllocator& physMemAlloc, VirtMemAllocator& virtMemAlloc) {
@@ -51,9 +51,9 @@ void HeapAllocator::init_heap_pages(
   }
 
   // set up heap blocks
-  heap->header.next = nullptr;
-  heap->header.size = (CHUNK_PAGES-3) * PAGE_SIZE;
-  heap->header.allocated = false;
+  heap->next = nullptr;
+  heap->size = (CHUNK_PAGES-3) * PAGE_SIZE;
+  heap->allocated = false;
   debug::serial_printf("heap reserved at v %08x\n", (uint32_t)heap);
   debug::serial_printf("slab8 reserved at v %08x\n", (uint32_t)slab8);
   debug::serial_printf("slab16 reserved at v %08x\n", (uint32_t)slab16);
@@ -110,20 +110,18 @@ void* HeapAllocator::slab32_malloc() {
 }
 
 void* HeapAllocator::block_malloc(size_t size) {
-  for (HeapBlock* node = heap; node != nullptr; node = node->header.next) {
-    HeapBlock::Header& header = node->header;
-    if (!header.allocated && header.size - sizeof(HeapBlock) >= size) {
-      header.allocated = true;
-      size_t leftover = header.size - sizeof(HeapBlock) - size;
+  for (HeapBlock* node = heap; node != nullptr; node = node->next) {
+    if (!node->allocated && node->size - sizeof(HeapBlock) >= size) {
+      node->allocated = true;
+      size_t leftover = node->size - sizeof(HeapBlock) - size;
       leftover -= leftover % HEAP_BLOCK_ALIGN;
       if (leftover > 0) {
-        header.size -= leftover;
-        HeapBlock* next = (HeapBlock*)((uint32_t)node + header.size);
-        HeapBlock::Header& next_header = next->header;
-        next_header.next = header.next;
-        next_header.size = leftover;
-        next_header.allocated = false;
-        header.next = next;
+        node->size -= leftover;
+        HeapBlock* next = (HeapBlock*)((uint32_t)node + node->size);
+        next->next = node->next;
+        next->size = leftover;
+        next->allocated = false;
+        node->next = next;
       }
       return (void*)(node+1); // data is just after header
     }

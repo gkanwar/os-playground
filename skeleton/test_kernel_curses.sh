@@ -1,4 +1,9 @@
 #!/bin/bash
 
 # NOTE: Use alt-2 to get to QEMU monitor and quit
-qemu-system-i386 -curses -kernel bin/kernel.bin
+TARGET=$1
+if [[ "x${TARGET}" == "x" ]]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+qemu-system-i386 -curses -kernel bin/${TARGET}/kernel.bin

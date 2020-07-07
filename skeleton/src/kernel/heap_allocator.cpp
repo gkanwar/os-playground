@@ -33,7 +33,7 @@ void HeapAllocator::init_heap_pages(
     for (unsigned j = 0; j < CHUNK_PAGES; ++j) {
       void* heap_page = (void*)((uint32_t)phys_heap_chunks[i] + j*PAGE_SIZE);
       void* virt_page = (void*)((uint32_t)heap + (CHUNK_PAGES*i+j)*PAGE_SIZE);
-      void* res = virtMemAlloc.map_page(virt_page, heap_page);
+      [[maybe_unused]] void* res = virtMemAlloc.map_page(virt_page, heap_page);
       assert(res, "mapping heap page failed");
       // save addresses of suballocators
       if (j == 0) {

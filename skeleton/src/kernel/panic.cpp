@@ -1,5 +1,5 @@
+#include "assert.h"
 #include "kernel.h"
-#include "panic.h"
 #include "vga.h"
 
 void panic(const char* msg) {

@@ -4,13 +4,14 @@
  */
 
 #include <cstring>
+#include <new>
 
 #include "assert.h"
 #include "debug_serial.h"
 #include "heap_allocator.h"
+#include "interrupt_manager.h"
 #include "kernel.h"
 #include "multiboot.h"
-#include "panic.h"
 #include "phys_mem_allocator.h"
 #include "test.h"
 #include "vga.h"
@@ -76,11 +77,16 @@ int kernel_early_main(const multiboot_info_t *info) {
   return 0;
 }
   
-[[noreturn]] void kernel_main(void) 
+[[noreturn]]
+void kernel_main(void) 
 {
   debug::serial_printf("start kernel_main\n");
   VirtMemAllocator::get().clear_ident_map();
   debug::serial_printf("ident map cleared\n");
+
+  new InterruptManager;
+  InterruptManager::get().init_interrupts();
+  debug::serial_printf("interrupts enabled!\n");
 
   terminal_initialize();
   terminal_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -121,7 +127,7 @@ int kernel_early_main(const multiboot_info_t *info) {
   debug::serial_printf("malloc all good\n");
 
   // TODO: busy loop replaced with forking into real kernel threads
-  while (true) {}
+  while (true) { asm volatile ("hlt"::); }
 }
 
 }

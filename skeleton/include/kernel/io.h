@@ -48,6 +48,11 @@ inline void write_bits8(uint16_t port, uint8_t new_val, uint8_t mask) {
   out8(port, val);
 }
 
+inline void io_wait() {
+  // wait 1 IO cycle ~ 1usec, apparently regardless of proc speed
+  out8(0x80, 0); 
+}
+
 }
 
 #endif

@@ -6,4 +6,4 @@ if [[ "x${TARGET}" == "x" ]]; then
     echo "Usage: $0 <target>"
     exit 1
 fi
-qemu-system-i386 -curses -kernel bin/${TARGET}/kernel.bin
+qemu-system-i386 -no-reboot -curses -kernel bin/${TARGET}/kernel.bin

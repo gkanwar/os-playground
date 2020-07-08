@@ -60,7 +60,10 @@ KERNEL_SRCS = \
 	bootstrap.s \
 	debug_serial.cpp \
 	heap_allocator.cpp \
+	interrupt_impl.cpp \
+	interrupt_manager.cpp \
 	kernel.cpp \
+	memory.cpp \
 	panic.cpp \
 	phys_mem_allocator.cpp \
 	pre_kernel.cpp \
@@ -103,6 +106,8 @@ $(TBIN)/kernel/%.o: $(SRC)/kernel/%.s
 	$(CXX) $(ASFLAGS) -MD -MP -c $< -o $@ -isystem $(INCLUDE)/system -iquote $(INCLUDE)/kernel
 $(TBIN)/system/%.o: $(SRC)/system/%.cpp
 	$(CXX) $(CXXFLAGS) -MD -MP -c $< -o $@ -iquote $(INCLUDE)/system
+# special rules
+$(TBIN)/kernel/interrupt_impl.o: CXXFLAGS := $(CXXFLAGS) -mgeneral-regs-only
 
 # build the kernel binary
 $(KERNEL_OUT): $(OBJS) kernel.ld

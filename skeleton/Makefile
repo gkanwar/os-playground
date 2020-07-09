@@ -63,6 +63,7 @@ KERNEL_SRCS = \
 	interrupt_impl.cpp \
 	interrupt_manager.cpp \
 	kernel.cpp \
+	keyboard_state.cpp \
 	memory.cpp \
 	panic.cpp \
 	phys_mem_allocator.cpp \

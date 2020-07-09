@@ -10,6 +10,7 @@
 #include "debug_serial.h"
 #include "heap_allocator.h"
 #include "interrupt_manager.h"
+#include "keyboard_state.h"
 #include "kernel.h"
 #include "multiboot.h"
 #include "phys_mem_allocator.h"
@@ -84,6 +85,7 @@ void kernel_main(void)
   VirtMemAllocator::get().clear_ident_map();
   debug::serial_printf("ident map cleared\n");
 
+  new KeyboardState;
   new InterruptManager;
   InterruptManager::get().init_interrupts();
   debug::serial_printf("interrupts enabled!\n");

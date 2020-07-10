@@ -1,7 +1,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#define PROJ_NAME "gulfoss"
+#define PROJ_NAME "gullfoss"
 #define KERNEL_BASE 0xc0000000
 #ifndef ASM_FILE
 #define KERNEL_VIRT_TO_PHYS(addr) (((uint32_t)addr) - KERNEL_BASE)

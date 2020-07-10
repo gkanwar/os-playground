@@ -2,6 +2,8 @@
 #include "debug_serial.h"
 #include "keyboard_state.h"
 
+using ModifierBit = KeyboardState::ModifierBit;
+
 static KeyboardState* inst;
 KeyboardState::KeyboardState() {
   inst = this;
@@ -18,10 +20,16 @@ void KeyboardState::key_set_state(KeyCode code) {
   state_bitfield |= 1 << (code % 8);
   key_states[code / 8] = state_bitfield;
   if (code == KeyCode::left_shift || code == KeyCode::right_shift) {
-    lock_state |= (1 << LockBit::shift);
+    mod_state |= (1 << ModifierBit::shift);
+  }
+  else if (code == KeyCode::left_ctrl /*|| code == KeyCode::right_ctrl*/) {
+    mod_state |= (1 << ModifierBit::ctrl);
+  }
+  else if (code == KeyCode::left_alt /*|| code == KeyCode::right_alt*/) {
+    mod_state |= (1 << ModifierBit::alt);
   }
   if (subscriber) {
-    subscriber->key_down(code, lock_state);
+    subscriber->key_down(code, mod_state, lock_state);
   }
 }
 void KeyboardState::key_unset_state(KeyCode code) {
@@ -29,10 +37,16 @@ void KeyboardState::key_unset_state(KeyCode code) {
   state_bitfield &= ~(1 << (code % 8));
   key_states[code / 8] = state_bitfield;
   if (code == KeyCode::left_shift || code == KeyCode::right_shift) {
-    lock_state &= ~(1 << LockBit::shift);
+    mod_state &= ~(1 << ModifierBit::shift);
+  }
+  else if (code == KeyCode::left_ctrl /*|| code == KeyCode::right_ctrl*/) {
+    mod_state &= ~(1 << ModifierBit::ctrl);
+  }
+  else if (code == KeyCode::left_alt /*|| code == KeyCode::right_alt*/) {
+    mod_state &= ~(1 << ModifierBit::alt);
   }
   if (subscriber) {
-    subscriber->key_up(code, lock_state);
+    subscriber->key_up(code, mod_state, lock_state);
   }
 }
 void KeyboardState::key_update_state(KeyCode code, bool make) {
@@ -49,8 +63,6 @@ static inline uint8_t unset_break_bit(uint8_t c) {
 }
 
 void KeyboardState::handle_scan_code(uint8_t c) {
-  debug::serial_printf("scan_state = %08x\n", static_cast<unsigned>(scan_state));
-  debug::serial_printf("&scan_state = %08x\n", (uint32_t)&scan_state);
   switch (scan_state) {
     case ready: {
       if (c == 0xe0) {
@@ -139,9 +151,8 @@ bool USKeyMap::is_printable(KeyCode code) const {
   return lower != 0;
 }
 
-char USKeyMap::to_ascii(KeyCode code, uint8_t lock_state) const {
-  debug::serial_printf("Code %02x to ascii\n", code);
-  bool upper = lock_state & 0x1;
+char USKeyMap::to_ascii(KeyCode code, uint8_t mod_state, uint8_t) const {
+  bool upper = (mod_state >> ModifierBit::shift) & 0x1;
   // TODO: deal with keypad numlock stuff
   if (upper) {
     return us_upper_ascii_table[code];

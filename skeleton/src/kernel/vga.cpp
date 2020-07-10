@@ -60,8 +60,8 @@ void VGATerminal::advance_char() {
 }
 void VGATerminal::retreat_char() {
   if (column == indent) {
-    column = VGATerminal::WIDTH;
-    if (row == 0) row = VGATerminal::HEIGHT;
+    column = VGATerminal::WIDTH-1;
+    if (row == 0) row = VGATerminal::HEIGHT-1;
     else row--;
   }
   else {

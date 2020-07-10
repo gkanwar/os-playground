@@ -77,8 +77,8 @@ enum KeyCode {
 
 class KeyboardSubscriber {
  public:
-  virtual void key_down(KeyCode code, uint8_t lock_state) = 0;
-  virtual void key_up(KeyCode code, uint8_t lock_state) = 0;
+  virtual void key_down(KeyCode code, uint8_t mod_state, uint8_t lock_state) = 0;
+  virtual void key_up(KeyCode code, uint8_t mod_state, uint8_t lock_state) = 0;
 };
 
 class KeyboardState {
@@ -97,16 +97,22 @@ class KeyboardState {
   void key_update_state(KeyCode code, bool make);
 
   enum LockBit {
+    caps = 0,
+    num = 1,
+    scroll = 2,
+  };
+  enum ModifierBit {
     shift = 0,
-    caps = 1,
-    num = 2,
-    scroll = 3
+    ctrl = 1,
+    alt = 2,
+    super = 3,
   };
   
  private:
   KeyboardSubscriber* subscriber = nullptr;
   uint8_t key_states[(KeyCode::_last+1)/8] = {0};
   uint8_t lock_state = 0;
+  uint8_t mod_state = 0;
   uint8_t scan_buf[3]; // TODO (long extended codes)
   enum ScanState {ready, e0_b1}; // TODO: more extended codes?
   ScanState scan_state = ScanState::ready;
@@ -115,12 +121,12 @@ class KeyboardState {
 class KeyMap {
  public:
   virtual bool is_printable(KeyCode code) const = 0;
-  virtual char to_ascii(KeyCode code, uint8_t lock_state) const = 0;
+  virtual char to_ascii(KeyCode code, uint8_t mod_state, uint8_t lock_state) const = 0;
 };
 class USKeyMap : public KeyMap {
  public:
   bool is_printable(KeyCode code) const override;
-  char to_ascii(KeyCode code, uint8_t lock_state) const override;
+  char to_ascii(KeyCode code, uint8_t mod_state, uint8_t lock_state) const override;
 };
 
 

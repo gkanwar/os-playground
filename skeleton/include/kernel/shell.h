@@ -18,8 +18,8 @@ class Shell : public KeyboardSubscriber {
     this->term.write_string("~~ Welcome to shell (type some stuff) ~~\n");
     this->term.set_cursor(1, 0);
   }
-  void key_down(KeyCode code, uint8_t lock_state) override;
-  void key_up(KeyCode code, uint8_t lock_state) override;
+  void key_down(KeyCode code, uint8_t mod_state, uint8_t lock_state) override;
+  void key_up(KeyCode code, uint8_t mod_state, uint8_t lock_state) override;
   void main();
 
  private:

@@ -38,13 +38,13 @@ void HeapAllocator::init_heap_pages(
       // save addresses of suballocators
       if (j == 0) {
         if (i == n_chunks-3) {
-          slab8 = (uint8_t*)virt_page;
+          slab8 = (Slab8*)virt_page;
         }
         else if (i == n_chunks-2) {
-          slab16 = (uint16_t*)virt_page;
+          slab16 = (Slab16*)virt_page;
         }
         else if (i == n_chunks-1) {
-          slab32 = (uint32_t*)virt_page;
+          slab32 = (Slab32*)virt_page;
         }
       }
     }

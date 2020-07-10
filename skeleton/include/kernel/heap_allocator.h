@@ -24,12 +24,15 @@ class HeapAllocator {
   HeapBlock* heap;
   // Avoid really tiny mallocs hitting the main heap, using "slab"
   // suballocators for primitive small types. Each suballoc is given one chunk.
-  uint8_t* slab8;
-  uint16_t* slab16;
-  uint32_t* slab32;
-  uint8_t slab8_bitmap[PAGE_SIZE * CHUNK_PAGES / (sizeof(uint8_t)*8)];
-  uint8_t slab16_bitmap[PAGE_SIZE * CHUNK_PAGES / (sizeof(uint16_t)*8)];
-  uint8_t slab32_bitmap[PAGE_SIZE * CHUNK_PAGES / (sizeof(uint32_t)*8)];
+  struct Slab8 { uint8_t data[8]; };
+  struct Slab16 { uint8_t data[16]; };
+  struct Slab32 { uint8_t data[32]; };
+  Slab8* slab8;
+  Slab16* slab16;
+  Slab32* slab32;
+  uint8_t slab8_bitmap[PAGE_SIZE * CHUNK_PAGES / (sizeof(Slab8)*8)];
+  uint8_t slab16_bitmap[PAGE_SIZE * CHUNK_PAGES / (sizeof(Slab16)*8)];
+  uint8_t slab32_bitmap[PAGE_SIZE * CHUNK_PAGES / (sizeof(Slab32)*8)];
 };
 
 #endif

@@ -14,11 +14,13 @@
 #include "kernel.h"
 #include "multiboot.h"
 #include "phys_mem_allocator.h"
+#include "shell.h"
 #include "test.h"
 #include "vga.h"
 #include "virt_mem_allocator.h"
 
 using namespace std;
+using Color = VGATerminal::Color;
 
 // Put these checks in once to ensure linux or x64 targets crash out
 #if defined(__linux__)
@@ -90,36 +92,36 @@ void kernel_main(void)
   InterruptManager::get().init_interrupts();
   debug::serial_printf("interrupts enabled!\n");
 
-  terminal_initialize();
-  terminal_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
-  terminal_writestring("Welcome to the " PROJ_NAME " kernel!\n");
-  terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-  terminal_writestring("More features to come, tests for some specific ones run below.\n");
-  terminal_writestring("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
+  VGATerminal term;
+  term.set_color(Color::white, Color::black);
+  term.write_string("Welcome to the " PROJ_NAME " kernel!\n");
+  term.set_color(Color::light_grey, Color::black);
+  term.write_string("More features to come, tests for some specific ones run below.\n");
+  term.write_string("Use alt-2 (or equivalent) to get to QEMU console and shutdown.\n");
   debug::serial_printf("terminal works!\n");
   
-  test::run_test("malloc(128)", [&]()->bool {
+  test::pretty_print_test("malloc(128)", term, [&]()->bool {
     uint8_t* mem_chunk = (uint8_t*)HeapAllocator::get().malloc(128);
     if (!mem_chunk) return false;
     memset((void*)mem_chunk, 0xff, 128);
     uint8_t byte = mem_chunk[77];
     return byte == 0xff;
   });
-  test::run_test("malloc(8)", []()->bool {
+  test::pretty_print_test("malloc(8)", term, []()->bool {
     uint8_t* mem_chunk = (uint8_t*)HeapAllocator::get().malloc(8);
     if (!mem_chunk) return false;
     memset((void*)mem_chunk, 0xab, 8);
     uint8_t byte = mem_chunk[5];
     return byte == 0xab;
   });
-  test::run_test("malloc(16)", []()->bool {
+  test::pretty_print_test("malloc(16)", term, []()->bool {
     uint8_t* mem_chunk = (uint8_t*)HeapAllocator::get().malloc(16);
     if (!mem_chunk) return false;
     memset((void*)mem_chunk, 0xcd, 16);
     uint8_t byte = mem_chunk[13];
     return byte == 0xcd;
   });
-  test::run_test("malloc(32)", []()->bool {
+  test::pretty_print_test("malloc(32)", term, []()->bool {
     uint8_t* mem_chunk = (uint8_t*)HeapAllocator::get().malloc(32);
     if (!mem_chunk) return false;
     memset((void*)mem_chunk, 0x88, 32);
@@ -128,8 +130,14 @@ void kernel_main(void)
   });
   debug::serial_printf("malloc all good\n");
 
-  // TODO: busy loop replaced with forking into real kernel threads
-  while (true) { asm volatile ("hlt"::); }
+  // Run our first real (kernel mode) app! For now it just takes ownership of
+  // the whole kernel :)
+  USKeyMap key_map;
+  app::Shell shell(key_map, term);
+  KeyboardState::get().set_subscriber(shell);
+  shell.main();
+
+  panic("kernel exited!\n");
 }
 
 }

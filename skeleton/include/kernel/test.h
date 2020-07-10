@@ -3,24 +3,26 @@
 
 #include "vga.h"
 
+using Color = VGATerminal::Color;
+
 namespace test {
 
 template<typename Test>
-void run_test(const char* name, Test t) {
-  auto color = terminal_getcolor();
+void pretty_print_test(const char* name, VGATerminal& term, Test t) {
+  auto color = term.get_color();
   if (t()) {
-    terminal_setcolor(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
-    terminal_writestring("[PASS ");
-    terminal_writestring(name);
-    terminal_writestring("]\n");
+    term.set_color(Color::green, Color::black);
+    term.write_string("[PASS ");
+    term.write_string(name);
+    term.write_string("]\n");
   }
   else {
-    terminal_setcolor(VGA_COLOR_RED, VGA_COLOR_BLACK);
-    terminal_writestring("[FAIL ");
-    terminal_writestring(name);
-    terminal_writestring("]\n");
+    term.set_color(Color::red, Color::black);
+    term.write_string("[FAIL ");
+    term.write_string(name);
+    term.write_string("]\n");
   }
-  terminal_setcolor(color);
+  term.set_color(color);
 }
 
 }

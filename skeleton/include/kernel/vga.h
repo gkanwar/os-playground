@@ -5,45 +5,58 @@
 #include <stdint.h>
 #include "kernel.h"
 
-// TODO: This should get wrapped up in a singleton class
-
 #define TERM_BUFFER 0xB8000
 #define VIRT_TERM_BUFFER (TERM_BUFFER + KERNEL_BASE)
 #define TERM_BUFFER_LEN 0x1000
 
-const size_t VGA_WIDTH = 80;
-const size_t VGA_HEIGHT = 25;
+// TODO: Some of the advance and retreat semantics are weird
+class VGATerminal {
+ public:
+  static const size_t WIDTH = 80;
+  static const size_t HEIGHT = 25;
 
-enum vga_color {
-  VGA_COLOR_BLACK = 0,
-  VGA_COLOR_BLUE = 1,
-  VGA_COLOR_GREEN = 2,
-  VGA_COLOR_CYAN = 3,
-  VGA_COLOR_RED = 4,
-  VGA_COLOR_MAGENTA = 5,
-  VGA_COLOR_BROWN = 6,
-  VGA_COLOR_LIGHT_GREY = 7,
-  VGA_COLOR_DARK_GREY = 8,
-  VGA_COLOR_LIGHT_BLUE = 9,
-  VGA_COLOR_LIGHT_GREEN = 10,
-  VGA_COLOR_LIGHT_CYAN = 11,
-  VGA_COLOR_LIGHT_RED = 12,
-  VGA_COLOR_LIGHT_MAGENTA = 13,
-  VGA_COLOR_LIGHT_BROWN = 14,
-  VGA_COLOR_WHITE = 15,
+  enum Color {
+    black = 0,
+    blue = 1,
+    green = 2,
+    cyan = 3,
+    red = 4,
+    magenta = 5,
+    brown = 6,
+    light_grey = 7,
+    dark_grey = 8,
+    light_blue = 9,
+    light_green = 10,
+    light_cyan = 11,
+    light_red = 12,
+    light_magenta = 13,
+    light_brown = 14,
+    white = 15,
+  };
+
+  VGATerminal();
+  void clear();
+  uint8_t get_color() const;
+  void set_color(Color fg, Color bg);
+  void set_color(uint8_t color);
+  void set_indent(size_t indent);
+  void putc(char);
+  void putc(char, bool advance);
+  void write(const char* data, size_t size);
+  void write_string(const char* data);
+  void advance_row();
+  void advance_char();
+  void retreat_char();
+  void set_pos(size_t r, size_t c);
+  void set_cursor(size_t r, size_t c);
+  void set_cursor_to_pos();
+  void cr();
+  void crlf();
+ private:
+  void putc(char c, uint8_t color, size_t x, size_t y);
+  size_t row, column, indent;
+  uint8_t color;
+  uint16_t* buffer;
 };
-
-void terminal_initialize();
-void terminal_clear();
-uint8_t terminal_getcolor();
-void terminal_setcolor(enum vga_color fg, enum vga_color bg);
-void terminal_setcolor(uint8_t color);
-void terminal_setindent(size_t indent);
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
-void terminal_advance_row();
-void terminal_advance_char();
-void terminal_putchar(char c);
-void terminal_write(const char* data, size_t size);
-void terminal_writestring(const char* data);
 
 #endif

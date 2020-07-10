@@ -40,8 +40,8 @@ TBIN := $(BIN)/$(TARGET)
 $(shell mkdir -p $(TBIN)/kernel)
 $(shell mkdir -p $(TBIN)/system)
 
-CFLAGS := -ffreestanding -Wall -Wextra
-CXXFLAGS := -std=c++17 -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra
+CFLAGS := -ffreestanding -Wall -Wextra -Werror
+CXXFLAGS := -std=c++17 -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -Werror
 ASFLAGS := -x assembler-with-cpp
 RELEASE_FLAGS := -DNDEBUG -O3
 DEBUG_FLAGS := -DDEBUG -O2 -g
@@ -68,6 +68,7 @@ KERNEL_SRCS = \
 	panic.cpp \
 	phys_mem_allocator.cpp \
 	pre_kernel.cpp \
+	shell.cpp \
 	vga.cpp \
 	virt_mem_allocator.cpp
 SYSTEM_SRCS = \

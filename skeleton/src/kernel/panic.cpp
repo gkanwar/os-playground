@@ -2,21 +2,23 @@
 #include "kernel.h"
 #include "vga.h"
 
-void panic(const char* msg) {
-  terminal_initialize();
-  terminal_setcolor(VGA_COLOR_WHITE, VGA_COLOR_MAGENTA);
-  terminal_clear();
-  terminal_writestring("\n\n\n\n\n\n\n\n");
+using Color = VGATerminal::Color;
+
+[[noreturn]] void panic(const char* msg) {
+  VGATerminal terminal;
+  terminal.set_color(Color::white, Color::magenta);
+  terminal.clear();
+  terminal.write_string("\n\n\n\n\n\n\n\n");
   const char title[] = "== " PROJ_NAME " kernel panic ==";
-  unsigned off = (VGA_WIDTH - sizeof(title) - 2)/2;
+  unsigned off = (VGATerminal::WIDTH - sizeof(title) - 2)/2;
   for (unsigned i = 0; i < off; ++i) {
-    terminal_writestring(" ");
+    terminal.write_string(" ");
   }
-  terminal_writestring(title);
-  terminal_setindent(4);
-  terminal_writestring("\n\n");
-  terminal_writestring("We're having too much Fun, something broke!\n\n");
-  terminal_writestring("Error: ");
-  terminal_writestring(msg);
+  terminal.write_string(title);
+  terminal.set_indent(4);
+  terminal.write_string("\n\n");
+  terminal.write_string("We're having too much Fun, something broke!\n\n");
+  terminal.write_string("Error: ");
+  terminal.write_string(msg);
   while (true) { asm volatile ("cli; hlt"::); }
 }

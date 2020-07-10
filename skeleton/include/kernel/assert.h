@@ -11,6 +11,6 @@
 #endif
 
 // "Pretty"-print our panic message and halt
-void panic(const char* msg);
+[[noreturn]] void panic(const char* msg);
 
 #endif

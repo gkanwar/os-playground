@@ -8,7 +8,7 @@ KeyboardState::KeyboardState() {
   debug::serial_printf("KeyboardState() scan_state = %08x\n", static_cast<unsigned>(scan_state));
   debug::serial_printf("KeyboardState() &scan_state = %08x\n", (uint32_t)&scan_state);
   debug::serial_printf("KeyboardState() &key_states = %08x\n", (uint32_t)key_states);
-  debug::serial_printf("KeyboardState() &lock_states = %08x\n", (uint32_t)&lock_states);
+  debug::serial_printf("KeyboardState() &lock_state = %08x\n", (uint32_t)&lock_state);
   debug::serial_printf("KeyboardState() &scan_buf = %08x\n", (uint32_t)scan_buf);
 }
 KeyboardState& KeyboardState::get() { return *inst; }
@@ -17,11 +17,23 @@ void KeyboardState::key_set_state(KeyCode code) {
   uint8_t state_bitfield = key_states[code / 8];
   state_bitfield |= 1 << (code % 8);
   key_states[code / 8] = state_bitfield;
+  if (code == KeyCode::left_shift || code == KeyCode::right_shift) {
+    lock_state |= (1 << LockBit::shift);
+  }
+  if (subscriber) {
+    subscriber->key_down(code, lock_state);
+  }
 }
 void KeyboardState::key_unset_state(KeyCode code) {
   uint8_t state_bitfield = key_states[code / 8];
   state_bitfield &= ~(1 << (code % 8));
   key_states[code / 8] = state_bitfield;
+  if (code == KeyCode::left_shift || code == KeyCode::right_shift) {
+    lock_state &= ~(1 << LockBit::shift);
+  }
+  if (subscriber) {
+    subscriber->key_up(code, lock_state);
+  }
 }
 void KeyboardState::key_update_state(KeyCode code, bool make) {
   if (make) key_set_state(code);
@@ -100,3 +112,43 @@ void KeyboardState::handle_scan_code(uint8_t c) {
     default: panic("bad keyboard scan state\n");
   }
 }
+
+
+
+static char us_lower_ascii_table[KeyCode::_last+1] = {
+  0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, '\t',
+  'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
+  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l' , ';', '\'', '`', 0, '\\',
+  'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
+  0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
+  0, 0, 0,
+};
+static char us_upper_ascii_table[KeyCode::_last+1] = {
+  0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, '\t',
+  'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
+  'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L' , ':', '"', '~', 0, '|',
+  'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?',
+  0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
+  0, 0, 0,
+};
+
+bool USKeyMap::is_printable(KeyCode code) const {
+  char lower = us_lower_ascii_table[code];
+  return lower != 0;
+}
+
+char USKeyMap::to_ascii(KeyCode code, uint8_t lock_state) const {
+  debug::serial_printf("Code %02x to ascii\n", code);
+  bool upper = lock_state & 0x1;
+  // TODO: deal with keypad numlock stuff
+  if (upper) {
+    return us_upper_ascii_table[code];
+  }
+  else {
+    return us_lower_ascii_table[code];
+  }
+}
+
+

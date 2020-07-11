@@ -32,3 +32,10 @@ See the osdev page for more details: `https://wiki.osdev.org/GCC_Cross-Compiler`
    make install-gcc
    make install-target-libgcc
    ```
+
+x64 cross compiler
+==================
+Everything pretty much works the same except the target triple is `x86_64-elf` instead. However, if global ctors are going to need linking to libgcc's `crtbegin.o` and `crtend.o` we should make sure libgcc is built to support long-mode relocation. We just modify the libgcc build as follows:
+```
+make all-target-libgcc CFLAGS_FOR_TARGET='-mcmodel=large -mno-red-zone'
+```
